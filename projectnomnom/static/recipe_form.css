@@ -1,0 +1,28 @@
+#ingredients_list ul{
+	list-style: none;
+	 margin-top: -20px;
+	 padding-left: 0;
+}
+#ingredients_list ul li {
+	display: inline;
+}
+#ingredients_list input[name*=amount] {
+  width: 60px;
+}
+#ingredients_list input[name*=prep] {
+  width: 80px;
+}
+#directions_list input[type=text] {
+  width: 500px;
+}
+.null_option {
+  color: gray;
+}
+.errorlist {
+	color: red;
+	font-family: monospace;
+	font-size: 20px;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}

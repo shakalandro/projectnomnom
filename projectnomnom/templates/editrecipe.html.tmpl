@@ -1,0 +1,19 @@
+{% include 'header.html.tmpl' %}
+    <div id='content_wrap'>
+      <h2 id='add_recipe_title'>Edit Your Recipe</h2>
+      <div id='content_area'>
+      {% if form.is_multipart %}
+        <form enctype="multipart/form-data" action="/editrecipe/{{ recipe_id }}" method="post">
+      {% else %}
+        <form action="/editrecipe/{{ recipe_id }}" method="post">
+      {% endif %}
+          {% csrf_token %}
+          {{ form.media }}
+          {{ form.as_p }}
+          <input type='submit' value='Submit' />
+        </form>
+      </div>
+    </div>
+    {% include 'recipe_list.html.tmpl' %}
+  </body>
+</html>

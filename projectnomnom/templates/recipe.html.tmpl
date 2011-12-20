@@ -1,0 +1,54 @@
+{% for recipe_object in recipes %}
+{% with recipe=recipe_object.fields %}
+<div class="recipe_wrap">
+  <div>
+    <h1 class='recipe_title'>
+      {{ recipe.name }}
+      <span class='recipe_author'> - {{ recipe.author }}</span>
+    </h1>
+    {% if recipe_object.pk in editable %}
+    <h1 class='edit_recipe'>
+        <a href='/editrecipe/{{ recipe_object.pk }}'>Edit</a>
+    </h1>
+    {% endif %}
+  </div>
+  <div class='recipe'>
+    {% if recipe.image %}
+    <div class='recipe_image'>
+      <img src='/recipeimage/{{ recipe_object.pk }}' alt='{{ recipe.name }}' />
+    </div>
+    {% endif %}
+    <p>
+      {{ recipe.description }} <br />
+      Category: {{ recipe.category }} - {{ recipe.subcategory }}, Serves: {{ recipe.servings }}
+    </p>
+    <h3>Ingredients</h3>
+    <ul>
+    {% for ingr in recipe.ingredients %}
+      <li>({{ ingr.amount }}) {{ ingr.item }}</li>
+    {% endfor %}
+    </ul>
+    <h3>Directions</h3>
+    <ol>
+    {% for step in recipe.directions %}
+      <li>{{ step.direction }}</li>
+    {% endfor %}
+    </ol>
+    {% if recipe.nutrition %}
+    <h3>Nutrition</h3>
+    <dl>
+    {% for key, value in recipe.nutrition.items %}
+      {% if key != 'id' %}
+      <dt>{{ key }}</dt>
+      <dd>{{ value }}</dd>
+      {% endif %}
+    {% endfor %}
+    </dl>
+    {% endif %}
+    <iframe src='http://www.facebook.com/plugins/like.php?href=http://localhost:8000/viewrecipe/{{ recipe_object.pk }}'
+        scrolling='no' frameborder='0' class='like_button_frame'></iframe>
+  </div>
+  <hr />
+</div>
+{% endwith %}
+{% endfor %}

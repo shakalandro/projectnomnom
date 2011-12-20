@@ -1,0 +1,11 @@
+#start project
+django-admin.py startproject mysite
+
+#make sure db is up to date with respect to models
+python manage.py syncdb
+
+#create new app
+python manage.py startapp polls
+
+#activate modes
+python manage.py sql polls

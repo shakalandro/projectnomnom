@@ -1,0 +1,19 @@
+    <div id='recipe_list'>
+      <ul id='recipe_categories'>
+        {% for category, x in index_data.items %}
+        <li>{{ category }}
+          <ul class='recipe_subcategory'>
+            {% for subcategory, recipes in x.items %}
+            <li>{{ subcategory }}
+              <ul class='index_recipe'>
+                {% for name, recipe_id in recipes %}
+                <li><a href='/viewrecipe/{{ recipe_id }}'>{{ name }}</a></li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
