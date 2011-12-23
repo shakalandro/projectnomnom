@@ -45,8 +45,8 @@
     {% endfor %}
     </dl>
     {% endif %}
-    <iframe src='http://www.facebook.com/plugins/like.php?href={{ page_host }}viewrecipe/{{ recipe_object.pk }}'
-        scrolling='no' frameborder='0' class='like_button_frame'></iframe>
+    <div class="fb-like like_button" data-href="{{ page_host }}viewrecipe/{{ recipe_object.pk }}"
+        data-send="true" data-width="500" data-show-faces="false"></div>
   </div>
   <hr />
 </div>
