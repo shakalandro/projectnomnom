@@ -197,7 +197,7 @@ def view_recipe(request, recipe_ids):
                                  'index_data': GetIndexData(request.user.uid),
                                  'editable': editable_recipes,
                                  'has_image': has_image,
-                                 'page_url': request.build_absolute_uri(request.path)})
+                                 'page_host': request.build_absolute_uri('/')})
 
 def recipe_image(request, recipe_id):
     try:
