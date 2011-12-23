@@ -80,6 +80,9 @@ def saveDirsAndIngrs(data, recipe_obj):
     ingrs.delete()
     dirs.delete()
     
+    if data.cleaned_data.get('image', None):
+        models.RecipeImage(recipe=recipe_obj, image=data.cleaned_data['image'])
+    
     ingrs = data['ingredients']
     dirs = data['directions']
     # Build ingrs entries
@@ -188,17 +191,18 @@ def view_recipe(request, recipe_ids):
         return response
     else:
         editable_recipes = map(lambda x: x['pk'], filter(lambda x: x['fields']['owner'] == request.user.uid, result))
-        print editable_recipes
+        has_image = map(lambda y: y['pk'], filter(lambda x: len(models.RecipeImage.objects.filter(recipe=x['pk'])), result))
         return shortcuts.render(request, 'viewrecipe.html.tmpl', 
                                 {'recipes': result,
                                  'index_data': GetIndexData(request.user.uid),
                                  'editable': editable_recipes,
+                                 'has_image': has_image,
                                  'page_url': request.build_absolute_uri(request.path)})
 
 def recipe_image(request, recipe_id):
     try:
         response = HttpResponse(mimetype="image/jpeg")
-        recipe = models.Recipe.objects.get(id=recipe_id)
+        recipe = models.RecipeImage.objects.get(recipe=recipe_id)
         if recipe.image is not None and recipe.image != '':
             logging.info('image found: %s' % len(recipe.image))
             input = StringIO.StringIO(base64.b64decode(recipe.image))

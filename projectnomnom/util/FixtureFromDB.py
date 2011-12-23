@@ -29,6 +29,10 @@ if __name__ == '__main__':
     data = []
     for recipe in models.Recipe.objects.all():
         data.append(recipe)
+        try:
+            data.append(models.RecipeImage.objects.get(recipe=recipe.id))
+        except:
+            pass
         for recipe_ingr in models.RecipeIngredient.objects.all().filter(recipe=recipe.id):
             data.append(recipe_ingr)
             data.append(models.Ingredient.objects.get(id=recipe_ingr.ingredient.id))
@@ -40,11 +44,11 @@ if __name__ == '__main__':
             data.append(rating)
     
     out = open(os.path.join(dir_name, '%s_%s.json' % (args.out, datetime.datetime.now().isoformat())), 'w')
-    out.write(serializers.serialize('json', data))
+    out.write(serializers.serialize('json', data, indent=2))
     out.close()
     print 'Data saved to %s' % out.name
     
     out = open(os.path.join(args.dir, 'initial_data.json'), 'w')
-    out.write(serializers.serialize('json', data))
+    out.write(serializers.serialize('json', data, indent=2))
     out.close()
     print 'Data saved to %s' % out.name

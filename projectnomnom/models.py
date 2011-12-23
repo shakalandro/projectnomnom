@@ -58,6 +58,10 @@ class Directions(models.Model):
     recipe = models.ForeignKey('Recipe')
     step_number = models.PositiveSmallIntegerField()
     direction = models.TextField()
+    
+class RecipeImage(models.Model):
+    recipe = models.ForeignKey('Recipe')
+    image = models.TextField(blank=False, null=True)
 
 class Recipe(models.Model):
     """The schema for a recipe."""
@@ -71,7 +75,6 @@ class Recipe(models.Model):
     category = models.CharField(choices=map(lambda x: (x, x), GetCategories()), max_length=50)
     subcategory = models.CharField(validators=[lambda x: x in itertools.chain(*GetSubcategories().values())],
                                      max_length=50)
-    image = models.TextField(blank=False, null=True)
     
     #timings
     prep_time = models.IntegerField(blank=False, null=True)

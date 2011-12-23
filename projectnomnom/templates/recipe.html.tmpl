@@ -13,7 +13,7 @@
     {% endif %}
   </div>
   <div class='recipe'>
-    {% if recipe.image %}
+    {% if recipe_object.pk in has_image %}
     <div class='recipe_image'>
       <img src='/recipeimage/{{ recipe_object.pk }}' alt='{{ recipe.name }}' />
     </div>
