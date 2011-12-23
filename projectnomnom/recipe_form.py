@@ -75,7 +75,7 @@ class RecipeForm(forms.Form):
     
     name = forms.CharField(required=True, label='Recipe Name')
     author = forms.CharField(required=True, label='Recipe Author')
-    public = forms.BooleanField(required=True, initial=True)
+    public = forms.BooleanField(required=False, initial=True)
     image = forms.ImageField(required=False)
     category = forms.ChoiceField(choices=BuildCategoryChoices(), required=True, label='Category',
                                  validators=[CategoryValidator])

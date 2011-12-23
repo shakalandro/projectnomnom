@@ -97,7 +97,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'projectnomnom.facebook_middleware.FacebookMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
@@ -145,4 +145,10 @@ LOGGING = {
             'propagate': True,
         },
     }
+}
+
+FACEBOOK = {
+    'APP_ID': '275585199158118',
+    'APP_SECRET': '3c45eaa21ff31203a68072f71cb3c7b4',
+    'PERMISSIONS': []
 }

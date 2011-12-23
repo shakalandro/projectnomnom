@@ -85,3 +85,10 @@ class Recipe(models.Model):
     carbohydrates = models.PositiveSmallIntegerField(blank=False, null=True)
     fat = models.PositiveSmallIntegerField(blank=False, null=True)
     sugar = models.PositiveSmallIntegerField(blank=False, null=True)
+
+
+class FacebookUser(models.Model):
+    name = models.TextField()
+    uid = models.EmailField()
+    token = models.TextField()
+    expiration = models.DateTimeField()

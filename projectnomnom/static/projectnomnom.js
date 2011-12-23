@@ -1,3 +1,4 @@
+/*
 $(document).ready(function() {
 	window.fbAsyncInit = function() {
         FB.init({appId: '161204603981737', status: true, cookie: true,
@@ -17,3 +18,4 @@ $(document).ready(function() {
        d.getElementsByTagName('head')[0].appendChild(js);
     }(document));
 });
+*/

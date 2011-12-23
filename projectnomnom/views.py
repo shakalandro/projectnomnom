@@ -17,7 +17,7 @@ from django import shortcuts
 def getValidRecipes(user):
     public_recipes = models.Recipe.objects.filter(public=True)
     my_recipes = models.Recipe.objects.filter(public=False, owner=user)
-    return JoinRecipes(list(my_recipes) + list(public_recipes))
+    return sorted(JoinRecipes(list(my_recipes) + list(public_recipes)), key=lambda x: x['pk'])
 
 
 def JoinRecipes(recipes):
@@ -60,7 +60,7 @@ def getModelInstance(recipe, request):
     parts = recipe.cleaned_data['category'].split('-')
     recipe.cleaned_data['category'] = parts[0]
     recipe.cleaned_data['subcategory'] = parts[1]
-    recipe.cleaned_data['owner'] = 'test@example.com'
+    recipe.cleaned_data['owner'] = request.user.uid
     if 'image' in request.FILES:
         image_data = request.FILES['image'].read()
         recipe.cleaned_data['image'] = base64.b64encode(image_data)
@@ -107,26 +107,29 @@ def saveDirsAndIngrs(data, recipe_obj):
 # Start Handlers
 
 def add_recipe(request):
+    print 'adding: %s' % request.method
     if request.method == 'GET':
         recipe_form_inst = recipe_form.RecipeForm()
         return shortcuts.render(request, 'addrecipe.html.tmpl',
                                 {'form': recipe_form_inst,
-                                 'index_data': GetIndexData('test@example.com')})
+                                 'index_data': GetIndexData(request.user.uid),
+                                 'fb_code': request.REQUEST.get('code', None)})
     elif request.method == 'POST':
         # need to wipe and rewrite new directions and ingreadients, need to pull this out for security
         recipe = recipe_form.RecipeForm(request.POST)
         if recipe.is_valid():
             recipe_obj = getModelInstance(recipe, request)
             recipe_obj.save()
+            print 'recipe_id: %s' % recipe_obj.id
             saveDirsAndIngrs(recipe.cleaned_data, recipe_obj)
             return HttpResponseRedirect('/viewrecipe/%d' % recipe_obj.id)
         else:
             return shortcuts.render(request, 'addrecipe.html.tmpl',
                                     {'form': recipe,
-                                     'index_data': GetIndexData('test@example.com')})
+                                     'index_data': GetIndexData(request.user.uid)})
 def edit_recipe(request, recipe_id):
     recipe = models.Recipe.objects.get(id=recipe_id)
-    if recipe.owner != 'test@example.com' and False:
+    if recipe.owner != request.user.uid and False:
         return HttpResponseForbidden()
     
     if request.method == 'GET':
@@ -146,8 +149,9 @@ def edit_recipe(request, recipe_id):
         recipe_form_data = recipe_form.RecipeForm(recipe_dict)
         return shortcuts.render(request, 'editrecipe.html.tmpl',
                                 {'form': recipe_form_data,
-                                 'index_data': GetIndexData('test@example.com'),
-                                 'recipe_id': recipe.id})
+                                 'index_data': GetIndexData(request.user.uid),
+                                 'recipe_id': recipe.id,
+                                 'fb_code': request.REQUEST.get('code', None)})
     else:
         recipe = recipe_form.RecipeForm(request.POST)
         if recipe.is_valid():
@@ -165,13 +169,15 @@ def edit_recipe(request, recipe_id):
 def view_recipe(request, recipe_ids):
     recipe_ids = urlparse.unquote(recipe_ids).split(',')
     if recipe_ids[0] == 'all':
-        result = getValidRecipes('test@example.com')
+        result = getValidRecipes(request.user.uid)
     else:
         recipe_ids = map(lambda x: long(x), recipe_ids)
-        recipes = getValidRecipes('test@example.com')
+        recipes = getValidRecipes(request.user.uid)
         recipes = filter(lambda x: x is not None and
-                         (x['fields']['owner'] == 'test@example.com' or x['fields']['public']) and
+                         (x['fields']['owner'] == request.user.uid or x['fields']['public']) and
                          x['pk'] in recipe_ids, recipes)
+        if len(recipes) != len(recipe_ids):
+            return HttpResponseBadRequest('You do not have permission to view the requested recipe(s).')
         result = recipes
            
     args = urlparse.parse_qs(request.META['QUERY_STRING'])
@@ -181,11 +187,13 @@ def view_recipe(request, recipe_ids):
         response.write(result)
         return response
     else:
-        editable_recipes = map(lambda x: x['pk'], filter(lambda x: x['fields']['owner'] == 'test@example.com', result))
+        editable_recipes = map(lambda x: x['pk'], filter(lambda x: x['fields']['owner'] == request.user.uid, result))
         print editable_recipes
         return shortcuts.render(request, 'viewrecipe.html.tmpl', 
-                                {'recipes': result, 'index_data': GetIndexData('test@example.com'),
-                                 'editable': editable_recipes})
+                                {'recipes': result,
+                                 'index_data': GetIndexData(request.user.uid),
+                                 'editable': editable_recipes,
+                                 'page_url': request.build_absolute_uri(request.path)})
 
 def recipe_image(request, recipe_id):
     try:
