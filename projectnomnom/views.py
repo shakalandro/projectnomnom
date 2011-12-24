@@ -5,7 +5,7 @@ import operator
 import logging
 import StringIO
 import datetime
-from projectnomnom import models, recipe_form
+from projectnomnom import models, recipe_form, settings
 from PIL import Image
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect, HttpResponseForbidden, HttpResponseBadRequest
 from django.core import serializers
@@ -16,7 +16,7 @@ from django import shortcuts
 
 def getValidRecipes(user):
     public_recipes = models.Recipe.objects.filter(public=True)
-    my_recipes = models.Recipe.objects.filter(public=False, owner=user)
+    my_recipes = models.Recipe.objects.filter(public=False, owner__in=[user] + settings.FACEBOOK['APP_ADMINS'])
     return sorted(JoinRecipes(list(my_recipes) + list(public_recipes)), key=lambda x: x['pk'])
 
 
@@ -130,7 +130,7 @@ def add_recipe(request):
                                      'index_data': GetIndexData(request.user.uid)})
 def edit_recipe(request, recipe_id):
     recipe = models.Recipe.objects.get(id=recipe_id)
-    if recipe.owner != request.user.uid and False:
+    if recipe.owner != request.user.uid and str(request.user.uid) not in settings.FACEBOOK['APP_ADMINS']:
         return HttpResponseForbidden()
     
     if request.method == 'GET':
@@ -176,9 +176,7 @@ def view_recipe(request, recipe_ids):
     else:
         recipe_ids = map(lambda x: long(x), recipe_ids)
         recipes = getValidRecipes(request.user.uid)
-        recipes = filter(lambda x: x is not None and
-                         (x['fields']['owner'] == request.user.uid or x['fields']['public']) and
-                         x['pk'] in recipe_ids, recipes)
+        recipes = filter(lambda x: x['pk'] in recipe_ids, recipes)
         if len(recipes) != len(recipe_ids):
             return HttpResponseBadRequest('You do not have permission to view the requested recipe(s).')
         result = recipes
