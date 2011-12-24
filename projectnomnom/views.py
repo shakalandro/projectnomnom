@@ -157,9 +157,10 @@ def edit_recipe(request, recipe_id):
                                  'fb_code': request.REQUEST.get('code', None)})
     else:
         recipe = recipe_form.RecipeForm(request.POST)
+        logging.info(request.POST)
         if recipe.is_valid():
-            if 'image' not in recipe.cleaned_data or recipe.cleaned_data['image'] is None:
-                recipe.cleaned_data['image'] = models.Recipe.objects.get(id=recipe_id).image
+            if not recipe.cleaned_data.get('image', None):
+                recipe.cleaned_data['image'] = models.RecipeImage.objects.get(recipe=recipe_id).image
             recipe_obj = getModelInstance(recipe, request)
             recipe_obj.id = int(recipe_id)
             recipe_obj.created = datetime.datetime.now()
