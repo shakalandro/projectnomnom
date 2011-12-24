@@ -1,4 +1,5 @@
 projectnomnom/settings.py
+projectnomnom/recipes.csv
 venv
 *.pyc
 .project
