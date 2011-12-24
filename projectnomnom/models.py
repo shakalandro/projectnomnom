@@ -60,7 +60,7 @@ class Directions(models.Model):
     direction = models.TextField()
     
 class RecipeImage(models.Model):
-    recipe = models.ForeignKey('Recipe')
+    recipe = models.ForeignKey('Recipe', primary_key=True)
     image = models.TextField(blank=False, null=True)
 
 class Recipe(models.Model):

@@ -45,6 +45,10 @@ textarea {
 .recipe_subcategory, .index_recipe {
 	padding-left: 20px;
 }
+.recipe_break {
+	clear: both;
+	margin-top: 10px;
+}
 .like_button {
 	border: none;
 	width: 450px;

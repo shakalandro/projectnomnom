@@ -27,7 +27,7 @@ def JoinRecipes(recipes):
         directions = models.Directions.objects.filter(recipe__id=recipes[i]['pk'])
         recipes[i]['fields']['ingredients'] = map(lambda x: x['fields'], toJson(ingrs))
         recipes[i]['fields']['directions'] = sorted(map(lambda x: x['fields'], toJson(directions)),
-                                                    key=lambda x: x['step_number'])
+                                                    key=lambda x: int(x['step_number']))
     return recipes
 
 
@@ -56,21 +56,19 @@ def toJson(recipes):
 def getModelInstance(recipe, request):
     recipe = deepcopy(recipe)
     del recipe.cleaned_data['ingredients']
-    del recipe.cleaned_data['directions']            
+    del recipe.cleaned_data['directions']
+    del recipe.cleaned_data['image']         
     parts = recipe.cleaned_data['category'].split('-')
     recipe.cleaned_data['category'] = parts[0]
     recipe.cleaned_data['subcategory'] = parts[1]
     recipe.cleaned_data['owner'] = request.user.uid
-    if 'image' in request.FILES:
-        image_data = request.FILES['image'].read()
-        recipe.cleaned_data['image'] = base64.b64encode(image_data)
     return models.Recipe(**recipe.cleaned_data)    
 
 
 def saveDirsAndIngrs(data, recipe_obj):
     """
     Params:
-        data: a bound recipe form object
+        data: cleaned data from a bound recipe form object
         recipe_obj: a recipe model instance corresponding to recipe that has been saved
     """
     recipe_ingrs = models.RecipeIngredient.objects.filter(recipe=recipe_obj)
@@ -80,8 +78,8 @@ def saveDirsAndIngrs(data, recipe_obj):
     ingrs.delete()
     dirs.delete()
     
-    if data.cleaned_data.get('image', None):
-        models.RecipeImage(recipe=recipe_obj, image=data.cleaned_data['image'])
+    if data.get('image', None):
+        models.RecipeImage(recipe=recipe_obj, image=data['image']).save()
     
     ingrs = data['ingredients']
     dirs = data['directions']
@@ -110,7 +108,6 @@ def saveDirsAndIngrs(data, recipe_obj):
 # Start Handlers
 
 def add_recipe(request):
-    print 'adding: %s' % request.method
     if request.method == 'GET':
         recipe_form_inst = recipe_form.RecipeForm()
         return shortcuts.render(request, 'addrecipe.html.tmpl',
@@ -121,9 +118,10 @@ def add_recipe(request):
         # need to wipe and rewrite new directions and ingreadients, need to pull this out for security
         recipe = recipe_form.RecipeForm(request.POST)
         if recipe.is_valid():
+            if request.FILES.get('image', None):
+                recipe.cleaned_data['image'] = base64.b64encode(request.FILES['image'].read())
             recipe_obj = getModelInstance(recipe, request)
             recipe_obj.save()
-            print 'recipe_id: %s' % recipe_obj.id
             saveDirsAndIngrs(recipe.cleaned_data, recipe_obj)
             return HttpResponseRedirect('/viewrecipe/%d' % recipe_obj.id)
         else:
@@ -143,7 +141,7 @@ def edit_recipe(request, recipe_id):
                 recipe_dict['ingredients-%d-%s' % (idx, key)] = value
         del recipe_dict['ingredients']
         # fix directions
-        for idx, dir in enumerate(recipe_dict['directions']):
+        for idx, dir in enumerate(sorted(recipe_dict['directions'], key=lambda x: x['step_number'])):
             for key, value in dir.items():
                 recipe_dict['directions-%d-%s' % (idx, key)] = value
         del recipe_dict['directions']
@@ -157,9 +155,10 @@ def edit_recipe(request, recipe_id):
                                  'fb_code': request.REQUEST.get('code', None)})
     else:
         recipe = recipe_form.RecipeForm(request.POST)
-        logging.info(request.POST)
         if recipe.is_valid():
-            if not recipe.cleaned_data.get('image', None):
+            if request.FILES.get('image', None):
+                recipe.cleaned_data['image'] = base64.b64encode(request.FILES['image'].read())
+            else:
                 recipe.cleaned_data['image'] = models.RecipeImage.objects.get(recipe=recipe_id).image
             recipe_obj = getModelInstance(recipe, request)
             recipe_obj.id = int(recipe_id)
@@ -204,16 +203,15 @@ def recipe_image(request, recipe_id):
     try:
         response = HttpResponse(mimetype="image/jpeg")
         recipe = models.RecipeImage.objects.get(recipe=recipe_id)
-        if recipe.image is not None and recipe.image != '':
-            logging.info('image found: %s' % len(recipe.image))
-            input = StringIO.StringIO(base64.b64decode(recipe.image))
-            img = Image.open(input)
-            if img.size[0] > img.size[1]:
-                size = (500, int((img.size[0] * 1.0 / img.size[1]) * 500))
-            else:
-                size = (int((img.size[0] * 1.0 / img.size[1]) * 400), 400)
-            img.thumbnail(size)
-            img.save(response, 'JPEG')
-            return response
+        logging.info('image found: %s' % len(recipe.image))
+        input = StringIO.StringIO(base64.b64decode(recipe.image))
+        img = Image.open(input)
+        if img.size[0] > img.size[1]:
+            size = (500, int((img.size[0] * 1.0 / img.size[1]) * 500))
+        else:
+            size = (int((img.size[0] * 1.0 / img.size[1]) * 400), 400)
+        img.thumbnail(size)
+        img.save(response, 'JPEG')
+        return response
     except:
         return HttpResponseNotFound()

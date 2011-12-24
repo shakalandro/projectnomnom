@@ -47,12 +47,12 @@
     {% endif %}
     <iframe src='http://www.facebook.com/plugins/like.php?href={{ page_host }}viewrecipe/{{ recipe_object.pk }}'
         scrolling='no' frameborder='0' class='like_button'></iframe>
-   <!--
+    <!--
     <div class="fb-like like_button_frame" data-href="{{ page_host }}viewrecipe/{{ recipe_object.pk }}"
         data-send="true" data-width="500" data-show-faces="false"></div>
-   -->
+    -->
   </div>
-  <hr />
+  <hr class="recipe_break" />
 </div>
 {% endwith %}
 {% endfor %}

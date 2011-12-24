@@ -1,4 +1,5 @@
 import operator
+import json
 from django import forms
 from django.core import exceptions
 from django.core import validators
@@ -78,12 +79,13 @@ class ListInput(forms.Widget):
             values are returned.
         """
         relevant_data = filter(lambda thing: name in thing[0], data.items())
-        relevant_data = sorted(relevant_data, key=operator.itemgetter(0))
+        relevant_data = sorted(relevant_data, key=lambda x: int(x[0].split('-')[-2]))
         i = 0
         values = []
         form_count = 0
         while i < len(relevant_data):
             form_num = int(relevant_data[i][0].split('-')[-2])
+            print str(i) + str(relevant_data[i])
             j = i + 1
             all_blank = relevant_data[i][1] in validators.EMPTY_VALUES
             while j < len(relevant_data) and int(relevant_data[j][0].split('-')[-2]) == form_num:
