@@ -51,13 +51,16 @@ class FacebookMiddleware(object):
         return (result_dict["access_token"], result_dict["expires"])
 
     def process_request(self, request):
-        if not request.REQUEST.get('code', None):
-            return self.get_fb_code(request.build_absolute_uri())
+        if request.REQUEST.get('code', None):
+            try:
+                token, expiration = self.get_fb_access_token(request.REQUEST.get('code'),
+                                                             request.build_absolute_uri(request.path))
+                data = json.loads(self.fb_api_call('me', access_token=token))
+                request.user = models.FacebookUser(name=data['first_name']+data['last_name'],
+                                                   uid=data['id'], token=token, expiration=expiration)
+            except:
+                return self.get_fb_code(request.build_absolute_uri(request.path))
         else:
-            token, expiration = self.get_fb_access_token(request.REQUEST.get('code'),
-                                                         request.build_absolute_uri(request.path))
-            data = json.loads(self.fb_api_call('me', access_token=token))
-            request.user = models.FacebookUser(name=data['first_name']+data['last_name'],
-                                               uid=data['id'], token=token, expiration=expiration)
+            return self.get_fb_code(request.build_absolute_uri(request.path))
 
         
