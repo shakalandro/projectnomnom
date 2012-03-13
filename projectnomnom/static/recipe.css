@@ -31,7 +31,7 @@ textarea, select#id_recipes {
 #nav_buttons {
 	margin-left: 50px;
 }
-#nav_buttons > a, #banner_link {
+#nav_buttons > a, #nav_buttons > span, #banner_link {
 	vertical-align: middle;
 	padding: 10px;
 	width: 100px;

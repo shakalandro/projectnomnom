@@ -181,7 +181,7 @@ def view_recipe(request, recipe_ids):
                                  'has_image': has_image,
                                  'page_host': request.build_absolute_uri('/')})
 
-def cookbook(request):
+def generate_cookbook(request):
     if request.method == 'GET':
         return shortcuts.render(request, 'cookbook.html.tmpl',
                                 {'form': recipe_form.CookbookData(request.user),
