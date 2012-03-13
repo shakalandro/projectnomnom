@@ -1,0 +1,19 @@
+{% include 'header.html.tmpl' %}
+    <div id='content_wrap'>
+      <h2 id='add_recipe_title'>Create a Cookbook</h2>
+      <div id='content_area'>
+      {% if form.is_multipart %}
+        <form enctype="multipart/form-data" action="/cookbook" method="post">
+      {% else %}
+        <form action="/cookbook" method="post">
+      {% endif %}
+          <input type="hidden" name="code" value="{{ fb_code }}" />
+          {% csrf_token %}
+          {{ form.media }}
+          {{ form.as_p }}
+          <input type='submit' value='Submit' />
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

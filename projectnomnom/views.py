@@ -91,21 +91,6 @@ def writePDF():
 
 # Start Handlers
 
-def cookbook(request):
-    if request.method == 'GET':
-        return shortcuts.render(request, 'cookbook.html.tmpl',
-                                {'form': recipe_form.CookbookData(request.user),
-                                 'fb_code': request.REQUEST.get('code', None)})
-    elif request.method == 'POST':
-        form = recipe_form.CookbookData(request.POST)
-        if form.is_valid():
-            response = HttpResponse(mimetype="application/pdf")
-            pdf = writePDF(form.cleaned_data)
-            pdf.writePDFfile(response)
-            return response
-        else:
-            return HttpResponseBadRequest()
-
 def add_recipe(request):
     if request.method == 'GET':
         recipe_form_inst = recipe_form.RecipeForm()
@@ -195,6 +180,22 @@ def view_recipe(request, recipe_ids):
                                  'editable': editable_recipes,
                                  'has_image': has_image,
                                  'page_host': request.build_absolute_uri('/')})
+
+def cookbook(request):
+    if request.method == 'GET':
+        return shortcuts.render(request, 'cookbook.html.tmpl',
+                                {'form': recipe_form.CookbookData(request.user),
+                                 'fb_code': request.REQUEST.get('code', None)})
+    elif request.method == 'POST':
+        form = recipe_form.CookbookData(request.POST)
+        if form.is_valid():
+            response = HttpResponse(mimetype="application/pdf")
+            pdf = writePDF(form.cleaned_data)
+            pdf.writePDFfile(response)
+            return response
+        else:
+            return HttpResponseBadRequest()
+    
 
 def recipe_image(request, recipe_id):
     try:
