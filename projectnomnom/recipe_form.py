@@ -1,11 +1,12 @@
 import json
 import logging
+import operator
 from django import forms
 from django.core import exceptions
 from django.forms.formsets import formset_factory
 from django.utils import safestring
 from projectnomnom import models
-from projectnomnom.util import list_field
+from projectnomnom.util import list_field, recipe_util
 from django.core import serializers
 
 
@@ -112,3 +113,18 @@ class RecipeForm(forms.Form):
                    self.nutrition.as_ul() +
                    '</ul>')
         return safestring.mark_safe(result)
+    
+class CookbookData(forms.Form):
+    recipes = forms.MultipleChoiceField(choices=[], widget=forms.CheckboxSelectMultiple)
+    recipe_size = forms.ChoiceField(choices=[(1, 'full page'), (0.5, '1/2 page'), (0.16, '1/6 page')],
+                                    widget=forms.RadioSelect)
+    show_page_numbers = forms.BooleanField()
+    show_authors = forms.BooleanField()
+    
+    def __init__(self, user, *args, **kwargs):
+        super(forms.Form, self).__init__(*args, **kwargs)
+        recipe_ids = sorted(map(lambda x: (x['pk'], x['fields']['name']), recipe_util.getValidRecipes(user)),
+                            key=operator.itemgetter(1))
+        self.fields['recipes'] = forms.MultipleChoiceField(choices=recipe_ids,
+                                                           widget=forms.CheckboxSelectMultiple)
+

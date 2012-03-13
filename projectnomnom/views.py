@@ -1,38 +1,22 @@
-import json
 import urlparse
 import base64
 import operator
 import logging
 import StringIO
 import datetime
+import pyx
 from projectnomnom import models, recipe_form, settings
+from projectnomnom.util import recipe_util
 from PIL import Image
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect, HttpResponseForbidden, HttpResponseBadRequest
-from django.core import serializers
 from django.utils import datastructures
 from django.utils.copycompat import deepcopy
 from django import shortcuts
 
 
-def getValidRecipes(user):
-    public_recipes = models.Recipe.objects.filter(public=True)
-    my_recipes = models.Recipe.objects.filter(public=False, owner__in=[user] + settings.FACEBOOK['APP_ADMINS'])
-    return sorted(JoinRecipes(list(my_recipes) + list(public_recipes)), key=lambda x: x['pk'])
-
-
-def JoinRecipes(recipes):
-    recipes = toJson(recipes)
-    for i in range(len(recipes)):
-        ingrs = models.Ingredient.objects.filter(recipeingredient__recipe=recipes[i]['pk'])
-        directions = models.Directions.objects.filter(recipe__id=recipes[i]['pk'])
-        recipes[i]['fields']['ingredients'] = map(lambda x: x['fields'], toJson(ingrs))
-        recipes[i]['fields']['directions'] = sorted(map(lambda x: x['fields'], toJson(directions)),
-                                                    key=lambda x: int(x['step_number']))
-    return recipes
-
 
 def GetIndexData(user):
-        recipes = getValidRecipes(user)
+        recipes = recipe_util.getValidRecipes(user)
         # Map each recipe to a 4-tuple
         data = set(map(lambda x: (x['fields']['category'], x['fields']['subcategory'],
                                   x['fields']['name'], x['pk']), recipes))
@@ -49,9 +33,6 @@ def GetIndexData(user):
             result[category][subcategory].append((name, recipe_id))
         return result
 
-
-def toJson(recipes):
-    return json.loads(serializers.serialize('json', recipes))
 
 def getModelInstance(recipe, request):
     recipe = deepcopy(recipe)
@@ -105,7 +86,25 @@ def saveDirsAndIngrs(data, recipe_obj):
                                 direction=dirs['directions-%d-direction' % i])
         dir.save()
 
+def writePDF():
+    pass
+
 # Start Handlers
+
+def cookbook(request):
+    if request.method == 'GET':
+        return shortcuts.render(request, 'cookbook.html.tmpl',
+                                {'form': recipe_form.CookbookData(request.user),
+                                 'fb_code': request.REQUEST.get('code', None)})
+    elif request.method == 'POST':
+        form = recipe_form.CookbookData(request.POST)
+        if form.is_valid():
+            response = HttpResponse(mimetype="application/pdf")
+            pdf = writePDF(form.cleaned_data)
+            pdf.writePDFfile(response)
+            return response
+        else:
+            return HttpResponseBadRequest()
 
 def add_recipe(request):
     if request.method == 'GET':
@@ -134,7 +133,7 @@ def edit_recipe(request, recipe_id):
         return HttpResponseForbidden()
     
     if request.method == 'GET':
-        recipe_dict = JoinRecipes([recipe])[0]['fields']
+        recipe_dict = recipe_util.JoinRecipes([recipe])[0]['fields']
         # fix ingredients
         for idx, ingr in enumerate(recipe_dict['ingredients']):
             for key, value in ingr.items():
@@ -172,10 +171,10 @@ def edit_recipe(request, recipe_id):
 def view_recipe(request, recipe_ids):
     recipe_ids = urlparse.unquote(recipe_ids).split(',')
     if recipe_ids[0] == 'all':
-        result = getValidRecipes(request.user.uid)
+        result = recipe_util.getValidRecipes(request.user.uid)
     else:
         recipe_ids = map(lambda x: long(x), recipe_ids)
-        recipes = getValidRecipes(request.user.uid)
+        recipes = recipe_util.getValidRecipes(request.user.uid)
         recipes = filter(lambda x: x['pk'] in recipe_ids, recipes)
         if len(recipes) != len(recipe_ids):
             return HttpResponseBadRequest('You do not have permission to view the requested recipe(s).')
