@@ -113,13 +113,13 @@ class RecipeForm(forms.Form):
                    self.nutrition.as_ul() +
                    '</ul>')
         return safestring.mark_safe(result)
-    
+
 class CookbookData(forms.Form):
     recipes = forms.MultipleChoiceField(choices=[], widget=forms.CheckboxSelectMultiple)
     recipe_size = forms.ChoiceField(choices=[(1, 'full page'), (0.5, '1/2 page'), (0.16, '1/6 page')],
                                     widget=forms.RadioSelect)
-    show_page_numbers = forms.BooleanField()
-    show_authors = forms.BooleanField()
+    show_page_numbers = forms.BooleanField(required=False)
+    show_authors = forms.BooleanField(required=False)
     
     def __init__(self, user, *args, **kwargs):
         super(forms.Form, self).__init__(*args, **kwargs)

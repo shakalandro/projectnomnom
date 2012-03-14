@@ -86,8 +86,6 @@ def saveDirsAndIngrs(data, recipe_obj):
                                 direction=dirs['directions-%d-direction' % i])
         dir.save()
 
-def writePDF():
-    pass
 
 # Start Handlers
 
@@ -97,9 +95,9 @@ def add_recipe(request):
         return shortcuts.render(request, 'addrecipe.html.tmpl',
                                 {'form': recipe_form_inst,
                                  'index_data': GetIndexData(request.user.uid),
-                                 'fb_code': request.REQUEST.get('code', None)})
+                                 'fb_code': request.REQUEST.get('code', None),
+                                 'page_name': 'add_recipe'})
     elif request.method == 'POST':
-        # need to wipe and rewrite new directions and ingreadients, need to pull this out for security
         recipe = recipe_form.RecipeForm(request.POST)
         if recipe.is_valid():
             if request.FILES.get('image', None):
@@ -111,7 +109,9 @@ def add_recipe(request):
         else:
             return shortcuts.render(request, 'addrecipe.html.tmpl',
                                     {'form': recipe,
-                                     'index_data': GetIndexData(request.user.uid)})
+                                     'index_data': GetIndexData(request.user.uid),
+                                     'fb_code': request.REQUEST.get('code', None),
+                                     'page_name': 'add_recipe'})
 def edit_recipe(request, recipe_id):
     recipe = models.Recipe.objects.get(id=recipe_id)
     if recipe.owner != request.user.uid and str(request.user.uid) not in settings.FACEBOOK['APP_ADMINS']:
@@ -136,7 +136,8 @@ def edit_recipe(request, recipe_id):
                                 {'form': recipe_form_data,
                                  'index_data': GetIndexData(request.user.uid),
                                  'recipe_id': recipe.id,
-                                 'fb_code': request.REQUEST.get('code', None)})
+                                 'fb_code': request.REQUEST.get('code', None),
+                                 'page_name': 'edit_recipe'})
     else:
         recipe = recipe_form.RecipeForm(request.POST)
         if recipe.is_valid():
@@ -179,22 +180,40 @@ def view_recipe(request, recipe_ids):
                                  'index_data': GetIndexData(request.user.uid),
                                  'editable': editable_recipes,
                                  'has_image': has_image,
-                                 'page_host': request.build_absolute_uri('/')})
+                                 'page_host': request.build_absolute_uri('/'),
+                                 'page_name': 'view_recipe'})
+
+def writePDF(form_data):
+    pyx.text.set(mode='tex')
+    doc = pyx.document.document()
+    print form_data
+    for i in range(len(form_data['recipes'])):
+        canv = pyx.canvas.canvas()
+        canv.text(0, 0, str(form_data['recipes'][i]))
+        doc.append(pyx.document.page(canv,
+                paperformat=pyx.document.paperformat(8.5 * pyx.unit.inch, 11 * pyx.unit.inch),
+                margin=3*pyx.unit.t_cm))
+    return doc
 
 def generate_cookbook(request):
     if request.method == 'GET':
         return shortcuts.render(request, 'cookbook.html.tmpl',
                                 {'form': recipe_form.CookbookData(request.user),
-                                 'fb_code': request.REQUEST.get('code', None)})
+                                 'fb_code': request.REQUEST.get('code', None),
+                                 'page_name': 'cookbook'})
     elif request.method == 'POST':
-        form = recipe_form.CookbookData(request.POST)
+        form = recipe_form.CookbookData(request.user.uid, request.POST)
         if form.is_valid():
             response = HttpResponse(mimetype="application/pdf")
             pdf = writePDF(form.cleaned_data)
             pdf.writePDFfile(response)
             return response
         else:
-            return HttpResponseBadRequest()
+            print form.errors
+            return shortcuts.render(request, 'cookbook.html.tmpl',
+                                    {'form': form,
+                                     'fb_code': request.REQUEST.get('code', None),
+                                     'page_name': 'cookbook'})
     
 
 def recipe_image(request, recipe_id):

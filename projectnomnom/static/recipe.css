@@ -15,6 +15,9 @@ textarea, select#id_recipes {
 	width: 20%;
 	font-family: "Comfortaa", sans-serif;
 }
+#content_wrap_cookbook {
+	width: 100%;
+}
 #add_recipe_title {
 	font-family: "Comfortaa", sans-serif;
 	font-size: 50px;
@@ -41,6 +44,9 @@ textarea, select#id_recipes {
 }
 #title_bar {
 	margin-left: 20%;
+}
+#body_cookbook #title_bar {
+	margin-left: 0;
 }
 .recipe_subcategory, .index_recipe {
 	padding-left: 20px;
