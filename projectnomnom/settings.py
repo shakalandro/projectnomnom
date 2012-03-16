@@ -151,10 +151,10 @@ LOGGING = {
 }
 
 FACEBOOK = {
-    'APP_ID': '161204603981737',
-    'APP_SECRET': '24b1fb272dec99b2b1a0aa499c25f310',
-    #'APP_ID': '275585199158118',                            #dev
-    #'APP_SECRET': '3c45eaa21ff31203a68072f71cb3c7b4',   #dev
+    #'APP_ID': '161204603981737',
+    #'APP_SECRET': '24b1fb272dec99b2b1a0aa499c25f310',
+    'APP_ID': '275585199158118',                            #dev
+    'APP_SECRET': '3c45eaa21ff31203a68072f71cb3c7b4',   #dev
     'PERMISSIONS': [],
     'APP_ADMINS': ['501942668']
 }
