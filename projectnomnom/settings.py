@@ -1,5 +1,7 @@
 # Django settings for src project.
 
+import os
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -118,6 +120,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'projectnomnom',
+    'haystack',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -155,3 +158,7 @@ FACEBOOK = {
     'PERMISSIONS': [],
     'APP_ADMINS': ['501942668']
 }
+
+HAYSTACK_SITECONF = 'projectnomnom.search_indexes'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = os.path.join(os.path.dirname(__file__), 'whoosh_index')

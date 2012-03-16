@@ -88,6 +88,12 @@ class Recipe(models.Model):
     carbohydrates = models.PositiveSmallIntegerField(blank=False, null=True)
     fat = models.PositiveSmallIntegerField(blank=False, null=True)
     sugar = models.PositiveSmallIntegerField(blank=False, null=True)
+    
+    def __unicode__(self):
+        return self.title
+    
+    def __str__(self):
+        return self.title
 
 
 class FacebookUser(models.Model):

@@ -5,13 +5,16 @@ import logging
 import StringIO
 import datetime
 import pyx
-from projectnomnom import models, recipe_form, settings
+from projectnomnom import models, recipe_form, settings, cookbook_generator
 from projectnomnom.util import recipe_util
 from PIL import Image
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect, HttpResponseForbidden, HttpResponseBadRequest
 from django.utils import datastructures
 from django.utils.copycompat import deepcopy
 from django import shortcuts
+from haystack import forms as haystack_forms
+from haystack import views as haystack_views
+from haystack.query import SearchQuerySet
 
 
 
@@ -118,7 +121,7 @@ def edit_recipe(request, recipe_id):
         return HttpResponseForbidden()
     
     if request.method == 'GET':
-        recipe_dict = recipe_util.JoinRecipes([recipe])[0]['fields']
+        recipe_dict = recipe_util.joinRecipes([recipe])[0]['fields']
         # fix ingredients
         for idx, ingr in enumerate(recipe_dict['ingredients']):
             for key, value in ingr.items():
@@ -183,19 +186,8 @@ def view_recipe(request, recipe_ids):
                                  'page_host': request.build_absolute_uri('/'),
                                  'page_name': 'view_recipe'})
 
-def writePDF(form_data):
-    pyx.text.set(mode='tex')
-    doc = pyx.document.document()
-    print form_data
-    for i in range(len(form_data['recipes'])):
-        canv = pyx.canvas.canvas()
-        canv.text(0, 0, str(form_data['recipes'][i]))
-        doc.append(pyx.document.page(canv,
-                paperformat=pyx.document.paperformat(8.5 * pyx.unit.inch, 11 * pyx.unit.inch),
-                margin=3*pyx.unit.t_cm))
-    return doc
 
-def generate_cookbook(request):
+def cookbook(request):
     if request.method == 'GET':
         return shortcuts.render(request, 'cookbook.html.tmpl',
                                 {'form': recipe_form.CookbookData(request.user),
@@ -205,7 +197,8 @@ def generate_cookbook(request):
         form = recipe_form.CookbookData(request.user.uid, request.POST)
         if form.is_valid():
             response = HttpResponse(mimetype="application/pdf")
-            pdf = writePDF(form.cleaned_data)
+            gen = cookbook_generator.CookbookGenerator(request.user.uid, form.cleaned_data)
+            pdf = gen.generate()
             pdf.writePDFfile(response)
             return response
         else:
@@ -232,3 +225,15 @@ def recipe_image(request, recipe_id):
         return response
     except:
         return HttpResponseNotFound()
+    
+def search(request):
+    res = None
+    if u'q' in request.GET:
+        res = SearchQuerySet().auto_query(request.GET.get('q', None))
+        print res[0].name
+    
+    return shortcuts.render(request, 'search.html.tmpl',
+                            {'fb_code': request.REQUEST.get('code', None),
+                             'page_name': 'search',
+                             'query': request.REQUEST.get('q', None),
+                             'results': res})

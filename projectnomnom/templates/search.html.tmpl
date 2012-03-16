@@ -1,0 +1,25 @@
+{% include 'header.html.tmpl' %}
+    <div id='content_wrap'>
+      <div id='content_area'>
+        <h2>Search</h2>
+
+        <form method="GET" action="/search">
+            <input type="hidden" name="code" value="{{ fb_code }}" />
+            <input type="text" name="q" />
+            <input type="submit" />
+        </form>
+        {% if results %}
+        <h3>Results</h3>
+
+          {% for result in results %}
+            <p>
+                <a href="/viewrecipe/{{ result.pk }}">{{ result.name }}</a> | {{ result.author }}
+            </p>
+          {% empty %}
+            <p>No results found.</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>
