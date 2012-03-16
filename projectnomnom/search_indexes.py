@@ -8,7 +8,8 @@ from haystack import indexes, site
 from projectnomnom import models
 
 class RecipeIndex(indexes.SearchIndex): 
-    name = indexes.CharField(model_attr='name', document=True)
+    text = indexes.CharField(document=True)
+    name = indexes.CharField(model_attr='name')
     author = indexes.CharField(model_attr='author')
     
     def index_queryset(self):
