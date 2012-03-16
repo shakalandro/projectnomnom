@@ -230,7 +230,6 @@ def search(request):
     res = None
     if u'q' in request.GET:
         res = SearchQuerySet().auto_query(request.GET.get('q', None))
-        print res[0].name
     
     return shortcuts.render(request, 'search.html.tmpl',
                             {'fb_code': request.REQUEST.get('code', None),
