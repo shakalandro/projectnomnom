@@ -1,6 +1,7 @@
 projectnomnom/settings.py
 projectnomnom/recipes.csv
-projectnomnom/whoosh_index
+projectnomnom/whoosh_index/*
+projectnomnom/config.conf
 venv
 *.pyc
 .project
