@@ -151,10 +151,7 @@ LOGGING = {
     }
 }
 
-FB_APP_ID = '161204603981737'
-FB_APP_SECRET = '24b1fb272dec99b2b1a0aa499c25f310'
-
-fb_conf = ConfigParser.ConfigParser({'APP_ID': FB_APP_ID, 'APP_SECRET': FB_APP_SECRET})
+fb_conf = ConfigParser.ConfigParser()
 fb_conf.read(os.path.join(os.path.dirname(__file__), 'config.conf'))
 
 FACEBOOK = {
