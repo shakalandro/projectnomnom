@@ -232,11 +232,11 @@ def recipe_image(request, recipe_id):
 def search(request):
     res = None
     page_num = request.GET.get('p', 1)
+    page = None
     if u'q' in request.GET:
         res = SearchQuerySet().auto_query(request.GET.get('q', None))
-    pages = paginator.Paginator(res, SEARCH_RESULTS_PER_PAGE)
-    page = pages.page(page_num)
-    print page.object_list
+        pages = paginator.Paginator(res, SEARCH_RESULTS_PER_PAGE)
+        page = pages.page(page_num)
     return shortcuts.render(request, 'search.html.tmpl',
                             {'fb_code': request.REQUEST.get('code', None),
                              'page_name': 'search',
