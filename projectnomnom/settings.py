@@ -151,12 +151,15 @@ LOGGING = {
     }
 }
 
-conf = ConfigParser.ConfigParser()
-conf.read('config.conf')
+FB_APP_ID = '161204603981737'
+FB_APP_SECRET = '24b1fb272dec99b2b1a0aa499c25f310'
+
+fb_conf = ConfigParser.ConfigParser({'APP_ID': FB_APP_ID, 'APP_SECRET': FB_APP_SECRET})
+fb_conf.read('config.conf')
 
 FACEBOOK = {
-    'APP_ID': conf.get('fb_app_credentials', 'APP_ID'),
-    'APP_SECRET': conf.get('fb_app_credentials', 'APP_SECRET'),
+    'APP_ID': fb_conf.get('FB_CRED', 'APP_ID'),
+    'APP_SECRET': fb_conf.get('FB_CRED', 'APP_SECRET'),
     'PERMISSIONS': [],
     'APP_ADMINS': ['501942668']
 }
