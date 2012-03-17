@@ -8,7 +8,8 @@ from haystack import indexes, site
 from projectnomnom import models
 
 class RecipeIndex(indexes.SearchIndex): 
-    name = indexes.CharField(model_attr='name', document=True)
+    text = indexes.CharField(document=True)
+    name = indexes.CharField(model_attr='name')
     author = indexes.CharField(model_attr='author')
     
     def index_queryset(self):
@@ -16,7 +17,9 @@ class RecipeIndex(indexes.SearchIndex):
     
     def prepare(self, obj):
         self.prepared_data = super(RecipeIndex, self).prepare(obj)
-        self.prepared_data['name'] = obj.name
+        ingrs = models.Ingredient.objects.filter(recipeingredient__recipe=obj.pk)
+        ingr_text = reduce(lambda x, y: x + ' ' + y.item, ingrs, '')
+        self.prepared_data['text'] = obj.name + obj.author + ingr_text
         return self.prepared_data
     
 site.register(models.Recipe, RecipeIndex)

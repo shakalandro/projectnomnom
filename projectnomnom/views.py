@@ -12,10 +12,13 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.utils import datastructures
 from django.utils.copycompat import deepcopy
 from django import shortcuts
+from django.core import paginator
 from haystack import forms as haystack_forms
 from haystack import views as haystack_views
 from haystack.query import SearchQuerySet
 
+
+SEARCH_RESULTS_PER_PAGE = 10
 
 
 def GetIndexData(user):
@@ -228,11 +231,14 @@ def recipe_image(request, recipe_id):
     
 def search(request):
     res = None
+    page_num = request.GET.get('p', 1)
     if u'q' in request.GET:
         res = SearchQuerySet().auto_query(request.GET.get('q', None))
-    
+    pages = paginator.Paginator(res, SEARCH_RESULTS_PER_PAGE)
+    page = pages.page(page_num)
+    print page.object_list
     return shortcuts.render(request, 'search.html.tmpl',
                             {'fb_code': request.REQUEST.get('code', None),
                              'page_name': 'search',
                              'query': request.REQUEST.get('q', None),
-                             'results': res})
+                             'page': page})
