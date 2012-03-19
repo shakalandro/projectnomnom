@@ -74,6 +74,9 @@ textarea, select#id_recipes {
 	float: right;
 	padding-right: 30px;
 }
+.recipe_image h3, #search_title {
+	font-family: "Comfortaa", sans-serif;
+}
 .edit_recipe {
 	font-family: "Comfortaa", sans-serif;
 	font-size: 25px;
@@ -83,4 +86,8 @@ textarea, select#id_recipes {
 .recipe {
 	margin-left: 50px;
 	clear: both;
+}
+#body_search #content_area {
+	width: 50%;
+	margin: 0 auto;
 }

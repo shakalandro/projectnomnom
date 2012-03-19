@@ -1,7 +1,7 @@
 {% include 'header.html.tmpl' %}
     <div id='content_wrap'>
       <div id='content_area'>
-        <h2>Search</h2>
+        <h1 id='search_title'>Search</h1>
 
         <form method="GET" action="/search">
             <input type="hidden" name="code" value="{{ fb_code }}" />
@@ -36,5 +36,6 @@
         {% endif %}
       </div>
     </div>
+    {% include 'recipe_list.html.tmpl' %}
   </body>
 </html>

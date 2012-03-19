@@ -1,5 +1,6 @@
 from django.conf.urls.defaults import patterns, url
 from django.views.generic.simple import redirect_to
+from haystack.views import SearchView
 
 from django.contrib import admin
 admin.autodiscover()

@@ -2,11 +2,17 @@
     <div id='content_wrap'>
       <h2 id='add_recipe_title'>Edit Your Recipe</h2>
       <div id='content_area'>
-      {% if form.is_multipart %}
-        <form enctype="multipart/form-data" action="/editrecipe/{{ recipe_id }}" method="post">
-      {% else %}
-        <form action="/editrecipe/{{ recipe_id }}" method="post">
-      {% endif %}
+        {% if recipe.hasRecipeImage %}
+        <div class='recipe_image'>
+          <h3>Current Image:</h3>
+          <img src='/recipeimage/{{ recipe.pk }}.jpg' alt='{{ recipe.name }}' />
+        </div>
+        {% endif %}
+        {% if form.is_multipart %}
+        <form enctype="multipart/form-data" action="/editrecipe/{{ recipe.pk }}" method="post">
+        {% else %}
+        <form action="/editrecipe/{{ recipe.pk }}" method="post">
+        {% endif %}
           <input type="hidden" name="code" value="{{ fb_code }}" />
           {% csrf_token %}
           {{ form.media }}

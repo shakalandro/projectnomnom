@@ -1,5 +1,8 @@
 '''
-Created on Mar 15, 2012
+Defines the data to be indexed by the haystack module. If any changes are made to this module you
+must run the following command
+
+python manage.py rebuild_index
 
 @author: shakalandro
 '''
@@ -7,7 +10,7 @@ Created on Mar 15, 2012
 from haystack import indexes, site
 from projectnomnom import models
 
-class RecipeIndex(indexes.SearchIndex): 
+class RecipeIndex(indexes.RealTimeSearchIndex): 
     text = indexes.CharField(document=True)
     name = indexes.CharField(model_attr='name')
     author = indexes.CharField(model_attr='author')
@@ -22,4 +25,5 @@ class RecipeIndex(indexes.SearchIndex):
         self.prepared_data['text'] = obj.name + obj.author + ingr_text
         return self.prepared_data
     
+
 site.register(models.Recipe, RecipeIndex)

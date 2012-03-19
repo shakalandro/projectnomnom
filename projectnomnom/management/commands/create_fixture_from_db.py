@@ -1,7 +1,11 @@
 """
 This script saves the database into a fixture that could be used later to re-seed the database.
 
-Note: needs to be run from the django shell with python manage.py shell
+Note: needs to be run from the django shell in the project directory with
+    python manage.py create_fixture_from_db
+
+Currently does not work on remote instances on heroku. On heroku run this then delete the first line
+    heroku run python projectnomnom/manage.py dumpdata --indent=2 > fixtures/initial_data.json 
 
 @author: Roy McElmurry(roy.miv@gmail.com)
 """

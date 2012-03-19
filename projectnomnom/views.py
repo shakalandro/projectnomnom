@@ -139,7 +139,7 @@ def edit_recipe(request, recipe_id):
         return shortcuts.render(request, 'editrecipe.html.tmpl',
                                 {'form': recipe_form_data,
                                  'index_data': GetIndexData(request.user.uid),
-                                 'recipe_id': recipe.id,
+                                 'recipe': recipe,
                                  'fb_code': request.REQUEST.get('code', None),
                                  'page_name': 'edit_recipe'})
     else:
@@ -224,7 +224,8 @@ def recipe_image(request, recipe_id):
         return response
     except:
         return HttpResponseNotFound()
-    
+
+
 def search(request):
     res = None
     page_num = request.GET.get('p', 1)
@@ -237,4 +238,5 @@ def search(request):
                             {'fb_code': request.REQUEST.get('code', None),
                              'page_name': 'search',
                              'query': request.REQUEST.get('q', None),
-                             'page': page})
+                             'page': page,
+                             'index_data': GetIndexData(request.user.uid)})

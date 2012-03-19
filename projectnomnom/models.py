@@ -128,7 +128,7 @@ class Recipe(models.Model):
     sugar = models.PositiveSmallIntegerField(blank=False, null=True)
     
     def __str__(self):
-        return self.title
+        return self.name
     
     def getIngredients(self):
         """
