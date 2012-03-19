@@ -6,8 +6,8 @@
             {% for subcategory, recipes in x.items %}
             <li>{{ subcategory }}
               <ul class='index_recipe'>
-                {% for name, recipe_id in recipes %}
-                <li><a href='/viewrecipe/{{ recipe_id }}'>{{ name }}</a></li>
+                {% for r in recipes %}
+                <li><a href='/viewrecipe/{{ r.pk }}'>{{ r.name }}</a></li>
                 {% endfor %}
               </ul>
             </li>

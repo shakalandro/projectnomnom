@@ -1,20 +1,17 @@
 import urlparse
 import base64
-import operator
 import logging
 import StringIO
 import datetime
-import pyx
-from projectnomnom import models, recipe_form, settings, cookbook_generator
-from projectnomnom.util import recipe_util
+from projectnomnom import models, recipe_form, cookbook_generator
+from projectnomnom.util import recipe_access_control as acl
 from PIL import Image
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.utils import datastructures
 from django.utils.copycompat import deepcopy
 from django import shortcuts
 from django.core import paginator
-from haystack import forms as haystack_forms
-from haystack import views as haystack_views
 from haystack.query import SearchQuerySet
 
 
@@ -22,25 +19,21 @@ SEARCH_RESULTS_PER_PAGE = 10
 
 
 def GetIndexData(user):
-        recipes = recipe_util.getValidRecipes(user)
-        # Map each recipe to a 4-tuple
-        data = set(map(lambda x: (x['fields']['category'], x['fields']['subcategory'],
-                                  x['fields']['name'], x['pk']), recipes))
+        recipes = acl.RecipeAccessControl.getUsersRecipes(user)
         # sort the list by category and sub-sort by subcategory
-        data = sorted(data, key=operator.itemgetter(0, 1))
+        recipes = sorted(recipes, key=lambda x: (x.category, x.subcategory))
         result = datastructures.SortedDict()
-        for category, subcategory, name, recipe_id in data:
+        for r in recipes:
+            category, subcategory = (r.category, r.subcategory)
             if category not in result:
                 result[category] = datastructures.SortedDict()
             if subcategory not in result[category]:
                 result[category][subcategory] = []
-            if len(name) > 23:
-                name = name[:20].strip() + '...'
-            result[category][subcategory].append((name, recipe_id))
+            result[category][subcategory].append(r)
         return result
 
 
-def getModelInstance(recipe, request):
+def getRecipeModelFromForm(recipe, request):
     recipe = deepcopy(recipe)
     del recipe.cleaned_data['ingredients']
     del recipe.cleaned_data['directions']
@@ -108,7 +101,7 @@ def add_recipe(request):
         if recipe.is_valid():
             if request.FILES.get('image', None):
                 recipe.cleaned_data['image'] = base64.b64encode(request.FILES['image'].read())
-            recipe_obj = getModelInstance(recipe, request)
+            recipe_obj = getRecipeModelFromForm(recipe, request)
             recipe_obj.save()
             saveDirsAndIngrs(recipe.cleaned_data, recipe_obj)
             return HttpResponseRedirect('/viewrecipe/%d' % recipe_obj.id)
@@ -119,12 +112,17 @@ def add_recipe(request):
                                      'fb_code': request.REQUEST.get('code', None),
                                      'page_name': 'add_recipe'})
 def edit_recipe(request, recipe_id):
-    recipe = models.Recipe.objects.get(id=recipe_id)
-    if recipe.owner != request.user.uid and str(request.user.uid) not in settings.FACEBOOK['APP_ADMINS']:
+    recipes = acl.RecipeAccessControl.getUsersRecipes(request.user.uid, allowed_recipes=[recipe_id])
+    
+    if not len(recipes):
         return HttpResponseForbidden()
     
     if request.method == 'GET':
-        recipe_dict = recipe_util.joinRecipes([recipe])[0]['fields']
+        recipe = recipes[0]
+        recipe_dict = recipe.toJson()['fields']
+        recipe_dict['ingredients'] = map(lambda x: x.toJson()['fields'], recipe.getIngredients())
+        recipe_dict['directions'] = map(lambda x: x.toJson()['fields'], recipe.getDirections())
+    
         # fix ingredients
         for idx, ingr in enumerate(recipe_dict['ingredients']):
             for key, value in ingr.items():
@@ -151,7 +149,7 @@ def edit_recipe(request, recipe_id):
                 recipe.cleaned_data['image'] = base64.b64encode(request.FILES['image'].read())
             else:
                 recipe.cleaned_data['image'] = models.RecipeImage.objects.get(recipe=recipe_id).image
-            recipe_obj = getModelInstance(recipe, request)
+            recipe_obj = getRecipeModelFromForm(recipe, request)
             recipe_obj.id = int(recipe_id)
             recipe_obj.created = datetime.datetime.now()
             recipe_obj.save()
@@ -163,29 +161,27 @@ def edit_recipe(request, recipe_id):
 def view_recipe(request, recipe_ids):
     recipe_ids = urlparse.unquote(recipe_ids).split(',')
     if recipe_ids[0] == 'all':
-        result = recipe_util.getValidRecipes(request.user.uid)
+        recipes = acl.RecipeAccessControl.getUserAndPublicRecipes(request.user.uid)
     else:
         recipe_ids = map(lambda x: long(x), recipe_ids)
-        recipes = recipe_util.getValidRecipes(request.user.uid)
-        recipes = filter(lambda x: x['pk'] in recipe_ids, recipes)
+        recipes = acl.RecipeAccessControl.getUserAndPublicRecipes(request.user.uid, allowed_recipes=recipe_ids)
         if len(recipes) != len(recipe_ids):
             return HttpResponseBadRequest('You do not have permission to view the requested recipe(s).')
-        result = recipes
            
     args = urlparse.parse_qs(request.META['QUERY_STRING'])
     
     if 'output' in args and 'json' in args['output']:
         response = HttpResponse()
-        response.write(result)
+        response.write(map(lambda x: x.toJson(), recipes))
         return response
     else:
-        editable_recipes = map(lambda x: x['pk'], filter(lambda x: x['fields']['owner'] == request.user.uid, result))
-        has_image = map(lambda y: y['pk'], filter(lambda x: len(models.RecipeImage.objects.filter(recipe=x['pk'])), result))
+        verified_recipe_ids = map(lambda x: x.pk, recipes)
+        editable_recipes = acl.RecipeAccessControl.getUsersRecipes(request.user.uid,
+                allowed_recipes=verified_recipe_ids)
         return shortcuts.render(request, 'viewrecipe.html.tmpl', 
-                                {'recipes': result,
+                                {'recipes': recipes,
                                  'index_data': GetIndexData(request.user.uid),
                                  'editable': editable_recipes,
-                                 'has_image': has_image,
                                  'page_host': request.build_absolute_uri('/'),
                                  'page_name': 'view_recipe'})
 

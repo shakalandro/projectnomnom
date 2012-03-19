@@ -1,21 +1,20 @@
-{% for recipe_object in recipes %}
-{% with recipe=recipe_object.fields %}
+{% for recipe in recipes %}
 <div class="recipe_wrap">
   <div>
     <h1 class='recipe_title'>
       {{ recipe.name }}
       <span class='recipe_author'> - {{ recipe.author }}</span>
     </h1>
-    {% if recipe_object.pk in editable %}
+    {% if recipe in editable %}
     <h1 class='edit_recipe'>
-        <a href='/editrecipe/{{ recipe_object.pk }}'>Edit</a>
+        <a href='/editrecipe/{{ recipe.pk }}'>Edit</a>
     </h1>
     {% endif %}
   </div>
   <div class='recipe'>
-    {% if recipe_object.pk in has_image %}
+    {% if recipe.hasRecipeImage %}
     <div class='recipe_image'>
-      <img src='/recipeimage/{{ recipe_object.pk }}.jpg' alt='{{ recipe.name }}' />
+      <img src='/recipeimage/{{ recipe.pk }}.jpg' alt='{{ recipe.name }}' />
     </div>
     {% endif %}
     <p>
@@ -24,25 +23,43 @@
     </p>
     <h3>Ingredients</h3>
     <ul>
-    {% for ingr in recipe.ingredients %}
+    {% for ingr in recipe.getIngredients %}
       <li>({{ ingr.amount }}) {{ ingr.item }}</li>
     {% endfor %}
     </ul>
     <h3>Directions</h3>
     <ol>
-    {% for step in recipe.directions %}
+    {% for step in recipe.getDirections %}
       <li>{{ step.direction }}</li>
     {% endfor %}
     </ol>
-    {% if recipe.nutrition %}
+    {% if recipe.hasNutritionInfo %}
     <h3>Nutrition</h3>
     <dl>
-    {% for key, value in recipe.nutrition.items %}
-      {% if key != 'id' %}
-      <dt>{{ key }}</dt>
-      <dd>{{ value }}</dd>
+      {% if recipe.servingsize %}
+      <dt>Serving Size</dt>
+      <dd>{{ recipe.servingsize }}</dd>
       {% endif %}
-    {% endfor %}
+      {% if recipe.calories %}
+      <dt>Calories</dt>
+      <dd>{{ recipe.calories }}</dd>
+      {% endif %}
+      {% if recipe.protein %}
+      <dt>Protein</dt>
+      <dd>{{ recipe.protein }}</dd>
+      {% endif %}
+      {% if recipe.carbohydrates %}
+      <dt>Carbohydrates</dt>
+      <dd>{{ recipe.carbohydrates }}</dd>
+      {% endif %}
+      {% if recipe.fat %}
+      <dt>Fat</dt>
+      <dd>{{ recipe.fat }}</dd>
+      {% endif %}
+      {% if recipe.sugar %}
+      <dt>Sugar</dt>
+      <dd>{{ recipe.sugar }}</dd>
+      {% endif %}
     </dl>
     {% endif %}
     <iframe src='http://www.facebook.com/plugins/like.php?href={{ page_host }}viewrecipe/{{ recipe_object.pk }}'
@@ -54,5 +71,4 @@
   </div>
   <hr class="recipe_break" />
 </div>
-{% endwith %}
 {% endfor %}

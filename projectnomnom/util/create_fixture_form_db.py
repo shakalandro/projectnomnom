@@ -1,18 +1,17 @@
+"""
+This script saves the database into a fixture that could be used later to re-seed the database.
+
+Note: needs to be run from the django shell with python manage.py shell
+
+@author: Roy McElmurry(roy.miv@gmail.com)
+"""
+
 import argparse
 import datetime
 import os
-try:
-    from projectnomnom import models
-    from django.core import serializers
-except:
-    import sys
-    sys.path.append('.')
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'projectnomnom.settings'
-    from projectnomnom import models
-    from django.core import serializers
+from django.core import serializers
+from projectnomnom import models
 
-def to_serial(thing):
-    return 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build backup fixture from DB.')

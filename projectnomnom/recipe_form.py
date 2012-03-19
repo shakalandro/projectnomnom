@@ -1,27 +1,21 @@
-import json
 import logging
-import operator
 from django import forms
 from django.core import exceptions
 from django.forms.formsets import formset_factory
 from django.utils import safestring
 from projectnomnom import models
-from projectnomnom.util import list_field, recipe_util
-from django.core import serializers
-
-
-def to_json(stuff):
-    return json.loads(serializers.serialize('json', stuff))
+from projectnomnom.util import list_field
+from projectnomnom.util import recipe_access_control as acl
 
 
 def BuildCategoryChoices():
-    return models.GetSubcategories()
+    return models.ModelUtility.getSubcategories()
 
 
 def CategoryValidator(value):
     parts = value.split('-')
-    if (len(parts) != 2 or parts[0] not in models.GetCategories() or
-            parts[1] not in models.GetSubcategories(category=parts[0])):
+    if (len(parts) != 2 or parts[0] not in models.ModelUtility.getCategories() or
+            parts[1] not in models.ModelUtility.getSubcategories(category=parts[0])):
         raise exceptions.ValidationError('You must choose a valid category.')
 
 
@@ -123,8 +117,8 @@ class CookbookData(forms.Form):
     
     def __init__(self, user, *args, **kwargs):
         super(forms.Form, self).__init__(*args, **kwargs)
-        recipe_ids = sorted(map(lambda x: (x['pk'], x['fields']['name']), recipe_util.getValidRecipes(user)),
-                            key=operator.itemgetter(1))
+        recipe_ids = sorted(acl.RecipeAccessControl.getUserAndPublicRecipes(user),
+                            key=lambda x: x.pk)
         self.fields['recipes'] = forms.MultipleChoiceField(choices=recipe_ids,
                                                            widget=forms.CheckboxSelectMultiple)
 

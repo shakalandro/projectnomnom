@@ -1,5 +1,10 @@
-import operator
-import json
+"""
+This module adds a ListField to the standard django field types. ListField operates as a dynamic
+list of a collection of kinds of fields.
+
+@author: Roy McElmurry (roy.miv@gmail.com)
+"""
+
 from django import forms
 from django.core import exceptions
 from django.core import validators
@@ -9,7 +14,19 @@ from django.utils import datastructures
 
 
 class ListInput(forms.Widget):
+    """
+    This class acts as the primary widget for the ListField class. It's HTML representation is a
+    list of the form elements that correspond to the elements of the ListField.
+    """
+    
     def __init__(self, base_form, default_length=5, is_ordered=True, attrs=None):
+        """
+        Params:
+            base_form: The django form object from which the list elements will be based.
+            default_list: How many list elements to produce initially for HTML output.
+            in_ordered: Whether the HTML list is an ordered or unordered list.
+            attrs: Any additional attributes that generic django Widgets can take. 
+        """
         self.base_form = base_form
         temp_form = self.base_form()
         self.num_base_fields = len(temp_form.fields)
@@ -18,9 +35,30 @@ class ListInput(forms.Widget):
         super(ListInput, self).__init__(attrs)
 
     def __call__(self):
+        """
+        Required hack so that ListInput plays nice with the existing django widget framework.
+        """
         return self
 
     def render(self, name, values, attrs=None, add_javascript=True):
+        """
+        Overrides super class
+        
+        Produces HTML content. The returned HTML is a list of form data that corresponds to the
+        HTML rendered by the base_form constructor argument. If add_javascript is True then an HTML
+        button will be added that generates a new list element when clicked.
+        
+        In addition if add_javascript is True a javascript method by the name of "name_hook" where
+        name is the one provided will be called when a new list element is added and passed the
+        corresponding element. Depends on the JQuery library.
+        
+        Params:
+            name: A name for this HTML widget.
+            values: Data to be filled in as defaults to the form data elements.
+            attrs: Additional attributes that are passed to generic django widgets.
+            add_javascript: Whether to add Javascript that makes the list dynamic.
+        Return: A django safestring that represents the HTML representation of this widget.
+        """
         format_func = lambda x: '<ul>%s</ul>' % x.as_ul()
         if self.num_base_fields <= 1:
             format_func = lambda x: x.as_p()[3:-4]
@@ -39,8 +77,15 @@ class ListInput(forms.Widget):
         return safestring.mark_safe(result)
     
     def _get_javascript(self, name, format_func):
+        """
+        Produces Javascript code that makes the list widget dynamic. Depends on the JQuery library.
+        
+        Params:
+            name: A name for this HTML widget.
+            format_func: A function that will properly format a new element of the list in HTML.
+        Return: A string consisting of Javascript code.
+        """
         temp_form = self.base_form()
-        print temp_form.fields
         res = """
         function __add_%s() {
             $('#%s_list').append("<li>%s</li>");
@@ -69,14 +114,30 @@ class ListInput(forms.Widget):
         
 
     def _renumber_form_key(self, key, num):
+        """
+        Properly renumbers a form element's id.
+        
+        Params:
+            key: The original id string.
+            num: The desired id number.
+        Return: A string of the form %s-{num}-%s
+        """
         parts = key.split('-')
         parts[-2] = str(num)
         return '-'.join(parts)
 
     def value_from_datadict(self, data, files, name):
         """
-            Removes and renumbers empty forms. If all the forms were empty then all the form
-            values are returned.
+        Removes and renumbers empty forms. If all the forms were empty then all the form
+        values are returned.
+        
+        Params:
+            data: A dict of form data.
+            files: Any file objects that are associated with this form.
+            name: The name of this form element for use in filtering from the dict.
+        
+        Return: A dict of the relevant data for this field in a format that form_factory can
+            understand.
         """
         relevant_data = filter(lambda thing: name in thing[0], data.items())
         relevant_data = sorted(relevant_data, key=lambda x: int(x[0].split('-')[-2]))
@@ -107,9 +168,19 @@ class ListInput(forms.Widget):
 
 
 class ListField(forms.Field):
+    """
+    This class is a form field that can be included in any django model.
+    Uses another form as a reference for what to have as list elements.
+    """
     widget = ListInput
 
     def __init__(self, base_form=None, default_length=5, is_ordered=True, *args, **kwargs):
+        """
+        Params:
+            base_form: The django form object from which the list elements will be based.
+            default_list: How many list elements to produce initially for HTML output.
+            in_ordered: Whether the HTML list is an ordered or unordered list.
+        """
         if base_form is None:
             raise ValueError('A form must be specified for the list input.')
         self.base_form = base_form
@@ -117,6 +188,14 @@ class ListField(forms.Field):
         super(ListField, self).__init__(*args, **kwargs)
 
     def validate(self, values):
+        """
+        Determines if the given values represent a valid non-empty instance of this field.
+        
+        Params:
+            values: A dict of the form data that corresponds to this field form in a format that
+                form_factory understands.
+        Return: Whether the date is valid or not.
+        """
         super(ListField, self).validate(values)
         if len(values) <= 3:
             raise exceptions.ValidationError('This field group is required.')

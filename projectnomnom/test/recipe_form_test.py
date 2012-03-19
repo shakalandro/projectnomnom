@@ -1,13 +1,9 @@
 import mox
-import unittest
-import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'django.conf.global_settings'
-from google.appengine.dist import use_library
-use_library('django', '1.2')
+from django import test
+from django.utils import unittest
 from django import forms
 from django.core import exceptions
-from google.appengine.ext import testbed
-from rvm4.projectnomnom import recipe_form
+from projectnomnom.util import list_field
 
 
 class FakeForm(forms.Form):
@@ -18,14 +14,14 @@ class FakeForm(forms.Form):
 
 
 class FakeListForm(forms.Form):
-    listfield = recipe_form.ListField(base_form=FakeForm, default_length=2, label='Listfield')
+    listfield = list_field.ListField(base_form=FakeForm, default_length=2, label='Listfield')
 
 
 class RecipeFormTest(unittest.TestCase):
     def setUp(self):
         # Create an instance of Mox
         self.mox = mox.Mox()
-        self.testbed = testbed.Testbed()
+        test.utils.setup_test_environment()
         self.testbed.activate()
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
@@ -82,10 +78,10 @@ class RecipeFormTest(unittest.TestCase):
 <option value="1">1</option>
 <option value="2">2</option>
 </select></li></ul></li></ol><button id='add-test2' onclick='return false;'>Add</button>"""
-        input = recipe_form.ListInput(FakeForm, default_length=1)
+        input = list_field.ListInput(FakeForm, default_length=1)
         self.assertEqual(expected, input.render('test', None))
         
-        input2 = recipe_form.ListInput(FakeForm, default_length=2)
+        input2 = list_field.ListInput(FakeForm, default_length=2)
         self.assertEqual(expected2, input2.render('test2', None))
 
     def testListInputValueFromDataDict(self):
@@ -121,10 +117,10 @@ class RecipeFormTest(unittest.TestCase):
                      'test2-1-field2': 6,
                      'test2-1-field3': False,
                      'test2-1-field4': '8'}
-        input = recipe_form.ListInput(FakeForm, default_length=1)
+        input = list_field.ListInput(FakeForm, default_length=1)
         self.assertDictEqual(expected, input.value_from_datadict(input_data, None, 'test'))
         
-        input2 = recipe_form.ListInput(FakeForm, default_length=1)
+        input2 = list_field.ListInput(FakeForm, default_length=1)
         self.assertDictEqual(expected2, input2.value_from_datadict(input_data2, None, 'test2'))
 
     def testListField(self):
@@ -139,7 +135,7 @@ class RecipeFormTest(unittest.TestCase):
                       'test-1-field2': 6,
                       'test-1-field3': 'True',
                       'test-1-field4': '1'}
-        field = recipe_form.ListField(base_form=FakeForm, label='test')
+        field = list_field.ListField(base_form=FakeForm, label='test')
         try:
             field.clean(input_data)
         except exceptions.ValidationError, e:
@@ -203,4 +199,5 @@ Validation tests to write: verify that the submitted model is as expected
 
 
 if __name__ == "__main__":
+    test.utils.setup_test_environment()
     unittest.main()

@@ -1,8 +1,8 @@
 import mox
-import unittest
-from google.appengine.ext import testbed
-from google.appengine.api import users
-from rvm4.projectnomnom import recipe_model
+from django import test
+from django.contrib.auth import models as django_models
+from django.utils import unittest
+from projectnomnom import models
 
 class RecipeModelTest(unittest.TestCase):
 
@@ -158,8 +158,7 @@ class RecipeModelTest(unittest.TestCase):
     def setUp(self):
         # Create an instance of Mox
         self.mox = mox.Mox()
-        self.testbed = testbed.Testbed()
-        self.testbed.activate()
+        test.utils.setup_test_environment()
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
 
@@ -173,19 +172,19 @@ class RecipeModelTest(unittest.TestCase):
     def testRecipeConstruct(self):
         recipe_args = {'public': True,
                        'name': 'Borshct',
-                       'owner': users.User(email='test@example.com')
+                       'owner': django_models.User(email='test@example.com')
                        }
-        recipe = recipe_model.Recipe(**recipe_args)
+        recipe = models.Recipe(**recipe_args)
         self.assertTrue(recipe)
-
+"""
     def testRecipeFromDictSimple(self):
         recipe_dict = {'public': True,
                        'name': 'Borshct',
                        'owner': 'test@example.com'
                        }
-        recipe = recipe_model.Recipe.FromDict(recipe_dict)
+        recipe = models.Recipe.FromDict(recipe_dict)
         recipe.put()
-        self.assertEqual(recipe_model.Recipe.all().count(), 1)
+        self.assertEqual(models.Recipe.objects.all().count(), 1)
         self.assertEqual(recipe.public, True)
         self.assertTrue(recipe.created)
         self.assertEqual(recipe.name, 'Borshct')
@@ -201,9 +200,9 @@ class RecipeModelTest(unittest.TestCase):
                             'clean': 30
                             }
                        }
-        recipe = recipe_model.Recipe.FromDict(recipe_dict)
+        recipe = models.Recipe.FromDict(recipe_dict)
         recipe.put()
-        self.assertEqual(recipe_model.Recipe.all().count(), 1)
+        self.assertEqual(models.Recipe.objects.all().count(), 1)
         self.assertEqual(recipe.public, True)
         self.assertEqual(recipe.name, 'Borshct')
         self.assertEqual(recipe.owner.email(), 'test@example.com')
@@ -230,9 +229,9 @@ class RecipeModelTest(unittest.TestCase):
                              }
                             ]
                        }
-        recipe = recipe_model.Recipe.FromDict(recipe_dict)
+        recipe = models.Recipe.FromDict(recipe_dict)
         recipe.put()
-        self.assertEqual(recipe_model.Recipe.all().count(), 1)
+        self.assertEqual(models.Recipe.objects.all().count(), 1)
         self.assertEqual(recipe.public, True)
         self.assertEqual(recipe.name, 'Borshct')
         self.assertEqual(recipe.owner.email(), 'test@example.com')
@@ -241,7 +240,7 @@ class RecipeModelTest(unittest.TestCase):
         self.assertEqual(len(recipe.ingredients), 1)
         
         ingr_id = recipe.ingredients[0].id_or_name()
-        subs = recipe_model.Substitution.get(recipe.substitutions[0])
+        subs = models.Substitution.objects.get(recipe.substitutions[0])
         self.assertEqual(subs.ingredient.key().id_or_name(), ingr_id)
         self.assertEqual(subs.ingredient.item, 'Beets')
         self.assertEqual(subs.ingredient.prep, 'Diced')
@@ -252,14 +251,14 @@ class RecipeModelTest(unittest.TestCase):
         self.assertEqual(subs.comment, 'Kinda like Beets')
 
     def testRecipeFromDictFull(self):
-        recipe = recipe_model.Recipe.FromDict(RecipeModelTest.FAKE_RECIPE)
+        recipe = models.Recipe.FromDict(RecipeModelTest.FAKE_RECIPE)
         recipe.put()
         self.assertEqual(len(recipe.ingredients), 3)
         self.assertEqual(len(recipe.substitutions), 2)
         self.assertEqual(len(recipe.directions), 3)
         self.assertEqual(recipe.nutrition.calories, 1500)
 
-        recipe = recipe_model.Recipe.FromDict(RecipeModelTest.CONVERSION_RECIPE)
+        recipe = models.Recipe.FromDict(RecipeModelTest.CONVERSION_RECIPE)
         recipe.put()
         self.assertEqual(len(recipe.ingredients), 6)
         self.assertEqual(len(recipe.substitutions), 0)
@@ -269,11 +268,11 @@ class RecipeModelTest(unittest.TestCase):
     def testRecipeToDict(self):
         recipe_args = {'public': True,
                        'name': 'Borshct',
-                       'owner': users.User(email='test@example.com')
+                       'owner': django_models.User(email='test@example.com')
                        }
-        recipe = recipe_model.Recipe(**recipe_args)
+        recipe = models.Recipe(**recipe_args)
         recipe.put()
-        recipe_dict = recipe_model.Recipe.ToDict(recipe)
+        recipe_dict = models.Recipe.ToDict(recipe)
         self.assertEqual(recipe_dict['public'], True)
         self.assertEqual(recipe_dict['name'], 'Borshct')
         self.assertEqual(recipe_dict['owner'], 'test@example.com')
@@ -289,10 +288,10 @@ class RecipeModelTest(unittest.TestCase):
                         'cook': 20,
                         'clean': 30
                         }
-        timings = recipe_model.Timings(**timings_args)
+        timings = models.Timings(**timings_args)
         recipe_args['timings'] = timings.put()
-        recipe = recipe_model.Recipe(**recipe_args)
-        recipe_dict = recipe_model.Recipe.ToDict(recipe)
+        recipe = models.Recipe(**recipe_args)
+        recipe_dict = models.Recipe.ToDict(recipe)
         self.assertEqual(recipe_dict['public'], True)
         self.assertEqual(recipe_dict['name'], 'Borshct')
         self.assertEqual(recipe_dict['owner'], 'test@example.com')
@@ -305,7 +304,7 @@ class RecipeModelTest(unittest.TestCase):
     def testRecipeToDictWithSubstitutes(self):
         recipe_args = {'public': True,
                        'name': 'Borshct',
-                       'owner': users.User(email='test@example.com')
+                       'owner': django_models.User(email='test@example.com')
                        }
         ingredient_args = {'id': '1',
                            'item': 'Beets',
@@ -317,14 +316,14 @@ class RecipeModelTest(unittest.TestCase):
                              'amount': '4.0',
                              'comment': 'Kinda like Beets'
                              }
-        ingredient = recipe_model.Ingredient(**ingredient_args)
+        ingredient = models.Ingredient(**ingredient_args)
         substitution_args['ingredient'] = ingredient.put()
-        substitution = recipe_model.Substitution(**substitution_args)
+        substitution = models.Substitution(**substitution_args)
         recipe_args['ingredients'] = [ingredient.put()]
         recipe_args['substitutions'] = [substitution.put()]
-        recipe = recipe_model.Recipe(**recipe_args)
+        recipe = models.Recipe(**recipe_args)
         recipe.put()
-        recipe_dict = recipe_model.Recipe.ToDict(recipe)
+        recipe_dict = models.Recipe.ToDict(recipe)
         self.assertEqual(recipe_dict['public'], True)
         self.assertEqual(recipe_dict['name'], 'Borshct')
         self.assertEqual(recipe_dict['owner'], 'test@example.com')
@@ -337,8 +336,8 @@ class RecipeModelTest(unittest.TestCase):
         self.assertEqual(recipe_dict['substitutions'][0]['item'], 'Radishes')
 
     def testRecipeConvertRoundTrip(self):
-        recipe = recipe_model.Recipe.FromDict(RecipeModelTest.FAKE_RECIPE)
-        recipe_dict = recipe_model.Recipe.ToDict(recipe)
+        recipe = models.Recipe.FromDict(RecipeModelTest.FAKE_RECIPE)
+        recipe_dict = models.Recipe.ToDict(recipe)
         # Patch the created field because it is auto-generated
         fake_recipe_temp = RecipeModelTest.FAKE_RECIPE.copy()
         fake_recipe_temp['created'] = recipe_dict['created']
@@ -346,13 +345,13 @@ class RecipeModelTest(unittest.TestCase):
 
         # Make a second pass, get rid of created field
         del recipe_dict['created']
-        recipe2 = recipe_model.Recipe.FromDict(recipe_dict)
-        recipe_dict2 = recipe_model.Recipe.ToDict(recipe2)
+        recipe2 = models.Recipe.FromDict(recipe_dict)
+        recipe_dict2 = models.Recipe.ToDict(recipe2)
         # Patch the created field because it is auto-generated
         recipe_dict['created'] = recipe_dict2['created']
         self.assertDictEqual(recipe_dict, fake_recipe_temp)
         self.assertDictEqual(recipe_dict, recipe_dict2)
-
+"""
 
 if __name__ == '__main__':
     unittest.main()
