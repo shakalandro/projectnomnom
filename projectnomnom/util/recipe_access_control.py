@@ -1,4 +1,4 @@
-from projectnomnom import models, settings
+from projectnomnom import models
 
 class RecipeAccessControl(object):
     """

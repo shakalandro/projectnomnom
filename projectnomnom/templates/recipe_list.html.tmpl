@@ -6,9 +6,13 @@
             {% for subcategory, recipes in x.items %}
             <li>{{ subcategory }}
               <ul class='index_recipe'>
-                {% for r in recipes %}
+              {% for r in recipes %}
+                {% if r.name|length > 20 %}   
+                <li><a href='/viewrecipe/{{ r.pk }}'>{{ r.name|slice:":20" }}...</a></li>
+                {% else %}
                 <li><a href='/viewrecipe/{{ r.pk }}'>{{ r.name }}</a></li>
-                {% endfor %}
+                {% endif %}
+              {% endfor %}
               </ul>
             </li>
             {% endfor %}
